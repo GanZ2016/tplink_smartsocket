@@ -1,2 +1,3 @@
 # tplink_smartsocket
-Control TP_LINK smart socket HS110 locally
+- EECS 495 Internet Of Things
+- Control TP_LINK smart socket HS110 through home wifi
