@@ -21,7 +21,9 @@
 #
 import socket
 import argparse
-
+import csv
+from decimal import Decimal
+from datetime import datetime
 version = 0.1
 
 # Check if IP is valid
@@ -44,6 +46,7 @@ commands = {'info'     : '{"system":{"get_sysinfo":{}}}',
 			'countdown': '{"count_down":{"get_rules":{}}}',
 			'antitheft': '{"anti_theft":{"get_rules":{}}}',
 			'reboot'   : '{"system":{"reboot":{"delay":1}}}',
+			'power'	   : '{"emeter":{"get_realtime":{}}}',
 			'reset'    : '{"system":{"reset":{"delay":1}}}'
 }
 
@@ -83,7 +86,8 @@ if args.command is None:
 else:
 	cmd = commands[args.command]
 
-
+# initial value
+lastuse = Decimal(0.0);
 
 # Send command and receive reply 
 try:
@@ -92,8 +96,28 @@ try:
 	sock_tcp.send(encrypt(cmd))
 	data = sock_tcp.recv(2048)
 	sock_tcp.close()
-	
-	print "Sent:     ", cmd
-	print "Received: ", decrypt(data[4:])
+	res = decrypt(data)
+	current = Decimal(res[41:49])
+	voltage = Decimal(res[60:70])
+	power = Decimal(res[79:87])
+	use = Decimal(res[97:104]) - lastuse
+	lastuse = use
+	timeStr=datetime.now().strftime('%Y-%m-%d %H%M%S')
+	print res
+	# print "current:",current
+
+	# print "voltage:",voltage
+	# print "power:",power
+	# print "Time:",timeStr
+	print "Use:",use
+
+	with open('HS110.csv', 'a+') as csvfile:
+	    spamwriter = csv.writer(csvfile, delimiter=',',quoting=csv.QUOTE_ALL)
+	    spamwriter.writerow([timeStr, current, voltage, power,use])
+	# print "Sent:     ", cmd
+	# print "Received: ", decrypt(data[4:])
+	# print "current:" , decrypt(data[40:49])
+	# print "voltage:", decrypt(data[60:70])
+	# print "power:", decrypt(data[78:87])
 except socket.error:
 	quit("Cound not connect to host " + ip + ":" + str(port))

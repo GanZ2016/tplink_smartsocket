@@ -3,6 +3,18 @@
 - EECS 495 Internet Of Things
 - Control TP_LINK smart socket HS110 through home wifi
 
+---
+### Update 2017-05-29 ###
+
+- Record `current`, `voltage`, `power`, `power_consumption` into a csv file.
+ 
+ #### Usage ####
+ 
+1.  Set recording frequency, running time and device address in  `start.py`
+2. Open your terminal and go to project folder.
+3. Type `python start.py`
+
+
 ## tplink-smartplug.py ##
 
 A python client for the proprietary TP-Link Smart Home protocol to control TP-Link HS100 and HS110 WiFi Smart Plugs.
