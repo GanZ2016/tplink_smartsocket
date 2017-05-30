@@ -22,6 +22,7 @@
 import socket
 import argparse
 import csv
+import re
 from decimal import Decimal
 from datetime import datetime
 version = 0.1
@@ -88,7 +89,7 @@ else:
 
 # initial value
 lastuse = Decimal(0.0);
-
+example = "{\"emeter\":{\"get_realtime\":{\"current\":0.153188,\"voltage\":123.45678,\"power\":8.9012345,\"total\":0.002031,\"err_code\":0}}}"
 # Send command and receive reply 
 try:
 	sock_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -97,23 +98,25 @@ try:
 	data = sock_tcp.recv(2048)
 	sock_tcp.close()
 	res = decrypt(data)
-	current = Decimal(res[41:49])
-	voltage = Decimal(res[60:70])
-	power = Decimal(res[79:87])
-	use = Decimal(res[97:104]) - lastuse
+	#match string
+	current = Decimal(re.findall(r"current\":(.+?),",example)[0])
+	voltage = Decimal(re.findall(r"voltage\":(.+?),",example)[0])
+	power = Decimal(re.findall(r"power\":(.+?),",example)[0])
+	use = Decimal(re.findall(r"total\":(.+?),",example)[0])
+	diff = use - lastuse
 	lastuse = use
 	timeStr=datetime.now().strftime('%Y-%m-%d %H%M%S')
 	print res
-	# print "current:",current
-
-	# print "voltage:",voltage
-	# print "power:",power
-	# print "Time:",timeStr
-	print "Use:",use
+	print "current:",current
+	print "voltage:",voltage
+	print "power:",power
+	print "Time:",timeStr
+	print "last Use", lastuse
+	print "Use:",diff
 
 	with open('HS110.csv', 'a+') as csvfile:
 	    spamwriter = csv.writer(csvfile, delimiter=',',quoting=csv.QUOTE_ALL)
-	    spamwriter.writerow([timeStr, current, voltage, power,use])
+	    spamwriter.writerow([timeStr, current, voltage, power,diff])
 	# print "Sent:     ", cmd
 	# print "Received: ", decrypt(data[4:])
 	# print "current:" , decrypt(data[40:49])
