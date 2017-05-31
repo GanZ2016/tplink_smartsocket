@@ -88,8 +88,8 @@ else:
 	cmd = commands[args.command]
 
 # initial value
-lastuse = Decimal(0.0);
-example = "{\"emeter\":{\"get_realtime\":{\"current\":0.153188,\"voltage\":123.45678,\"power\":8.9012345,\"total\":0.002031,\"err_code\":0}}}"
+#lastuse = Decimal(0.0);
+#example = "{\"emeter\":{\"get_realtime\":{\"current\":0.153188,\"voltage\":123.45678,\"power\":8.9012345,\"total\":0.002031,\"err_code\":0}}}"
 # Send command and receive reply 
 try:
 	sock_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -99,28 +99,30 @@ try:
 	sock_tcp.close()
 	res = decrypt(data)
 	#match string
-	current = Decimal(re.findall(r"current\":(.+?),",example)[0])
-	voltage = Decimal(re.findall(r"voltage\":(.+?),",example)[0])
-	power = Decimal(re.findall(r"power\":(.+?),",example)[0])
-	use = Decimal(re.findall(r"total\":(.+?),",example)[0])
-	diff = use - lastuse
-	lastuse = use
+	current = Decimal(re.findall(r"current\":(.+?),",res)[0])
+	voltage = Decimal(re.findall(r"voltage\":(.+?),",res)[0])
+	power = Decimal(re.findall(r"power\":(.+?),",res)[0])
+	use = Decimal(re.findall(r"total\":(.+?),",res)[0])
+	#diff = use - lastuse
 	timeStr=datetime.now().strftime('%Y-%m-%d %H%M%S')
 	print res
 	print "current:",current
 	print "voltage:",voltage
 	print "power:",power
 	print "Time:",timeStr
-	print "last Use", lastuse
-	print "Use:",diff
+	#print "last Use", lastuse
+	print "Use:",use
+	#print "diff",diff
 
 	with open('HS110.csv', 'a+') as csvfile:
-	    spamwriter = csv.writer(csvfile, delimiter=',',quoting=csv.QUOTE_ALL)
-	    spamwriter.writerow([timeStr, current, voltage, power,diff])
+		spamwriter = csv.writer(csvfile, delimiter=',',quoting=csv.QUOTE_ALL)
+		spamwriter.writerow([timeStr, current, voltage, power,use])
 	# print "Sent:     ", cmd
 	# print "Received: ", decrypt(data[4:])
 	# print "current:" , decrypt(data[40:49])
 	# print "voltage:", decrypt(data[60:70])
 	# print "power:", decrypt(data[78:87])
+#	return use
 except socket.error:
 	quit("Cound not connect to host " + ip + ":" + str(port))
+

@@ -18,7 +18,7 @@ freq = 1
 
 
 def run_python():
-    cmd0 = "python tplink-smartplug.py -t " + addr + " -c power"
+    cmd0 = "python tplink_smartplug.py -t " + addr + " -c power"
     call([cmd0], shell = True)
 
 while i>0:
