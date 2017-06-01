@@ -71,6 +71,19 @@ def decrypt(string):
 		result += chr(a)
 	return result
 
+
+
+#---------------------------
+#Type
+
+lable = 'router';
+
+
+
+
+#---------------------------
+
+
 # Parse commandline arguments
 parser = argparse.ArgumentParser(description="TP-Link Wi-Fi Smart Plug Client v" + str(version))
 parser.add_argument("-t", "--target", metavar="<ip>", required=True, help="Target IP Address", type=validIP)
@@ -116,7 +129,7 @@ try:
 
 	with open('HS110.csv', 'a+') as csvfile:
 		spamwriter = csv.writer(csvfile, delimiter=',',quoting=csv.QUOTE_ALL)
-		spamwriter.writerow([timeStr, current, voltage, power,use])
+		spamwriter.writerow([timeStr, current, voltage, power,use,lable])
 	# print "Sent:     ", cmd
 	# print "Received: ", decrypt(data[4:])
 	# print "current:" , decrypt(data[40:49])
