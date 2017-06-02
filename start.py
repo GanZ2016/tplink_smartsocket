@@ -4,7 +4,7 @@ import time
 
 #-------------------#
 #change your device local address
-addr = "192.168.43.191"
+addr = "192.168.1.132"
 #-------------------#
 
 #-------------------#
@@ -13,7 +13,7 @@ i = 120
 #-------------------#
 
 #-------------------#
-#waht freq you want to run (min)
+#what freq you want to run (min)
 freq = 1 
 #-------------------#
 

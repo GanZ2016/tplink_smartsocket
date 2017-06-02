@@ -124,20 +124,17 @@ try:
 	use = Decimal(re.findall(r"total\":(.+?),",res)[0])
 	#diff = use - lastuse
 	#time = 
-	timeStr=datetime.now().strftime('%Y-%m-%d %H%M%S')
+	timeStr=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 	#--------------------
 	#insert into database
 	try:
 		cursor = cnx.cursor()
-		cursor.execute("INSERT INTO plug (datetime, current, voltage, power, consumption, status, name) VALUES ('%s', %s, %s, %s, %s, %s, '%s')",(timeStr,current,voltage,power,use,status,lable))
-		result = cursor.fetchall()
-		print result
+		cursor.execute("INSERT INTO plug (datetime, current, voltage, power, cons, status, name) VALUES (%s, %s, %s, %s, %s, %s, %s)",(timeStr,current,voltage,power,use,status,lable))
+		#result = cursor.fetchall()
+		cnx.commit()
 	finally:
-		cnx.close()
-
-
-
-
+		cnx.rollback()
+	cnx.close()	
 	#----------------------
 	print res
 	print "current:",current
