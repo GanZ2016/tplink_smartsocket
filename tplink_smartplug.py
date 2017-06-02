@@ -25,6 +25,10 @@ import csv
 import re
 from decimal import Decimal
 from datetime import datetime
+import mysql.connector    
+cnx = mysql.connector.connect(user='root', password='12345678',
+                              host='localhost',
+                              database='tplink')
 version = 0.1
 
 # Check if IP is valid
@@ -78,6 +82,8 @@ def decrypt(string):
 
 lable = 'router';
 
+status = 0;
+
 
 
 
@@ -117,7 +123,22 @@ try:
 	power = Decimal(re.findall(r"power\":(.+?),",res)[0])
 	use = Decimal(re.findall(r"total\":(.+?),",res)[0])
 	#diff = use - lastuse
+	#time = 
 	timeStr=datetime.now().strftime('%Y-%m-%d %H%M%S')
+	#--------------------
+	#insert into database
+	try:
+		cursor = cnx.cursor()
+		cursor.execute("INSERT INTO plug (datetime, current, voltage, power, consumption, status, name) VALUES ('%s', %s, %s, %s, %s, %s, '%s')",(timeStr,current,voltage,power,use,status,lable))
+		result = cursor.fetchall()
+		print result
+	finally:
+		cnx.close()
+
+
+
+
+	#----------------------
 	print res
 	print "current:",current
 	print "voltage:",voltage
@@ -129,7 +150,7 @@ try:
 
 	with open('HS110.csv', 'a+') as csvfile:
 		spamwriter = csv.writer(csvfile, delimiter=',',quoting=csv.QUOTE_ALL)
-		spamwriter.writerow([timeStr, current, voltage, power,use,lable])
+		spamwriter.writerow([timeStr, current, voltage, power,use,lable,status])
 	# print "Sent:     ", cmd
 	# print "Received: ", decrypt(data[4:])
 	# print "current:" , decrypt(data[40:49])

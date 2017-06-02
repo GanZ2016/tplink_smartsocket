@@ -1,9 +1,10 @@
 import os
 from subprocess import call
 import time
+
 #-------------------#
 #change your device local address
-addr = "192.168.1.132"
+addr = "192.168.43.191"
 #-------------------#
 
 #-------------------#
