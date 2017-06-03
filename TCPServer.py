@@ -24,8 +24,16 @@ commands = {'info'     : '{"system":{"get_sysinfo":{}}}',
 			'reboot'   : '{"system":{"reboot":{"delay":1}}}',
 			'power'	   : '{"emeter":{"get_realtime":{}}}',
 			'reset'    : '{"system":{"reset":{"delay":1}}}',
-			'emeter'   : '{"emeter":{"get_realtime":{}}}'
+			'emeter'   : '{"emeter":{"get_realtime":{}}}',
+			'status'   : 'status',
+			'lable'	   : 'lable'
 }
+
+#-----------
+global lable
+
+lable = ''
+
 
 # Encryption and Decryption of TP-Link Smart Home Protocol
 # XOR Autokey Cipher with starting key = 171
@@ -47,7 +55,7 @@ def decrypt(string):
 		result += chr(a)
 	return result
 
-ip = "10.0.0.244"
+socket_ip = "10.105.110.33"
 port = 9999
 
 
@@ -90,7 +98,20 @@ def check_realtime():
 	rt_res.append(rt_name)
 	cnx.close()	
 	return rt_res
-    		
+
+def month_cons():
+	cnx = mysql.connector.connect(user='root', password='12345678', host='localhost', database='tplink')
+	sql = "SELECT cons WHERE DATE_SUB(CURDATE(), INTERVAL 30 DAY) <= datatime;"	
+	total_cons = []
+	try:
+		cursor = cnx.cursor()
+		cursor.execute(sql)
+		for row in cursor.fetchall():
+    			total_cons.append(row[0])
+	except:
+		cnx.rollback()
+	cnx.close()	
+	return max(total_cons) - min(total_cons) 		
 
 class MyTCPHandler(SocketServer.BaseRequestHandler):
     """
@@ -104,28 +125,40 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
     def handle(self):
         # self.request is the TCP socket connected to the client
         self.data = self.request.recv(2048)
-        cmd = commands[self.data]
-        print "command: ", cmd
-        try:
-        	sock_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        	sock_tcp.connect((ip, port))
-        	sock_tcp.send(encrypt(cmd))
-        	data = sock_tcp.recv(2048)
-        	sock_tcp.close()
-        except socket.error:
-        	quit("Cound not connect to host " + ip + ":" + str(port))
 
-        # print "{} wrote:".format(self.client_address[0])
-        # print self.data
-        msg = decrypt(data[4:])
-        print "Returned: ", msg
-        self.request.sendall(msg)
+        if self.data[0:2] == "m:":
+            lable = self.data[2:]
+            print lable
+            self.request.sendall("Set lable to: "+ lable)
+        else:
+            cmd = commands[self.data]
+            print "command: ", cmd
+            if cmd == "status":
+                res_string = check_status_name()
+                print "status", res_string[0]
+                print "name", res_string[1]
+                self.request.sendall(res_string[1] + ": "+ res_string[0])
+            else:
+                try:
+                    sock_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    sock_tcp.connect((socket_ip, port))
+                    sock_tcp.send(encrypt(cmd))
+                    data = sock_tcp.recv(2048)
+                    sock_tcp.close()
+                except socket.error:
+                    quit("Cound not connect to host " + socket_ip + ":" + str(port))
+
+                # print "{} wrote:".format(self.client_address[0])
+                # print self.data
+                msg = decrypt(data[4:])
+                print "Returned: ", msg
+                self.request.sendall(msg[0])
 
 
 
 
 if __name__ == "__main__":
-    HOST, PORT = "10.0.0.94", 8000
+    HOST, PORT = "10.105.110.33", 8000
 
     # Create the server, binding to localhost on port 9999
     server = SocketServer.TCPServer((HOST, PORT), MyTCPHandler)

@@ -9,7 +9,7 @@ import scipy.stats
 from decimal import Decimal
 from datetime import datetime
 import mysql.connector    
-
+import TCPServer
 import json
 
 
@@ -18,7 +18,7 @@ version = 0.1
 #---------------------------
 #Type
 
-lable = 'light';
+lable = TCPServer.lable;
 
 status = 0;
 
@@ -116,7 +116,7 @@ try:
 	timeStr=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 	#-------------------
 	#get the range of current and power to check the status
-	sql = "SELECT current,power FROM plug where name = \"light\" and status = 0 and power > 0.2 ORDER BY id DESC LIMIT 10;" 
+	sql = "SELECT current,power FROM plug where name = " + lable + " and status = 0 and power > 0.2 ORDER BY id DESC LIMIT 10;" 
 	cnx = mysql.connector.connect(user='root', password='12345678',
 								host='localhost',
 								database='tplink')
@@ -158,6 +158,7 @@ try:
 		cursor = cnx.cursor(sql)
 		cursor.execute()
 		cnx.commit()
+		print "INSERT INTO DATABASE"
 	except:
 		cnx.rollback()		
 	cnx.close()	
@@ -173,11 +174,6 @@ try:
 	with open('HS110.csv', 'a+') as csvfile:
 		spamwriter = csv.writer(csvfile, delimiter=',',quoting=csv.QUOTE_ALL)
 		spamwriter.writerow([timeStr, current, voltage, power,use,lable,status])
-	# print type(data)
-
-	# with open('data.json','a') as f:
-	# 	f.write('\n')
-	# 	f.write(decrypt(data[4:]))
 
 	print "Sent:     ", cmd
 	print "Received: ", decrypt(data[4:])
