@@ -1,5 +1,23 @@
 import sys
 
+import socket
+import argparse
+
+import csv
+import re
+import numpy as np 
+import scipy.stats
+from decimal import Decimal
+from datetime import datetime
+import mysql.connector    
+import TCPServer
+import json
+
+#-------------
+
+status = 0;
+
+#-------------
 
 # print sys.argv[1]
 label = sys.argv[1]
@@ -52,7 +70,75 @@ def measure_socket(ip,port):
     except socket.error:
     	quit("Cound not connect to host " + ip + ":" + str(port))
 
-def insertToDB(reuslt,label):
+def insertToDB(result,label):
+	#--------------------
+	#match string
+	current = Decimal(re.findall(r"current\":(.+?),",result)[0])
+	voltage = Decimal(re.findall(r"voltage\":(.+?),",result)[0])
+	power = Decimal(re.findall(r"power\":(.+?),",result)[0])
+	use = Decimal(re.findall(r"total\":(.+?),",result)[0])
+	timeStr=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+	#-------------------
+	sql = "SELECT current,power FROM plug where name = " + label + " and status = 0 and power > 0.2 ORDER BY id DESC LIMIT 10;" 
+	cnx = mysql.connector.connect(user='root', password='12345678',
+								host='localhost',
+								database='tplink')
+
+	try:
+		cursor = cnx.cursor()
+		cursor.execute(sql)
+		get_current = []
+		get_power = []
+		#cnx.commit()
+		for row in cursor.fetchall():
+			get_power.append(row[1])
+			get_current.append(row[0])
+	except:
+		cnx.rollback()
+
+	power_mean = np.mean(get_power)
+	power_std = np.std(get_power)
+	power_diff = np.max(get_power) - np.min(get_power)
+	current_mean = np.mean(get_current)
+	current_diff = np.max(get_current) - np.min(get_current)
+	power_min = power_mean - power_diff
+	power_max = power_mean - power_diff
+	current_min = current_mean - current_diff
+	current_max = current_mean - current_diff
+	cnx.close()	
+	#--------------------
+	#set status to 1 if abnormal
+	if (current < current_min or current > current_max) and (power < power_min or power > power_max):
+    		status = 1
+	#--------------------
+	#insert into database
+	cnx = mysql.connector.connect(user='root', password='12345678',
+                              host='localhost',
+                              database='tplink')
+	sql = "INSERT INTO plug (datetime, current, voltage, power, cons, status, name) VALUES (%s, %s, %s, %s, %s, %s, %s)",(timeStr,current,voltage,power,use,status,label)
+	try:
+		cursor = cnx.cursor(sql)
+		cursor.execute()
+		cnx.commit()
+		print "INSERT INTO DATABASE"
+	except:
+		cnx.rollback()		
+	cnx.close()	
+	#----------------------
+	#print res
+	print "current:",current
+	print "voltage:",voltage
+	print "power:",power
+	print "Time:",timeStr
+	print "Use:",use
+	print "status",status
+
+	with open('HS110.csv', 'a+') as csvfile:
+		spamwriter = csv.writer(csvfile, delimiter=',',quoting=csv.QUOTE_ALL)
+		spamwriter.writerow([timeStr, current, voltage, power,use,label,status])
+
+	# print "Sent:     ", cmd
+	# print "Received: ", decrypt(data[4:])
 
 while(1):
     result = measure_socket(ip, port)
