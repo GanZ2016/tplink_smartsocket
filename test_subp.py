@@ -1,8 +1,6 @@
 import sys
-
 import socket
 import argparse
-
 import csv
 import re
 import numpy as np 
@@ -16,12 +14,12 @@ import json
 #-------------
 
 status = 0;
-
+ip = "10.0.0.244"
 #-------------
 
 # print sys.argv[1]
 label = sys.argv[1]
-ip = "10.0.0.244"
+
 port = 9999
 commands = {'info'     : '{"system":{"get_sysinfo":{}}}',
 			'on'       : '{"system":{"set_relay_state":{"state":1}}}',
