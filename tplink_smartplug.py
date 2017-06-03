@@ -1,5 +1,7 @@
+
 import socket
 import argparse
+
 import csv
 import re
 import numpy as np 
@@ -7,6 +9,9 @@ import scipy.stats
 from decimal import Decimal
 from datetime import datetime
 import mysql.connector    
+
+import json
+
 
 version = 0.1
 
@@ -25,7 +30,7 @@ def validIP(ip):
 		socket.inet_pton(socket.AF_INET, ip)
 	except socket.error:
 		parser.error("Invalid IP Address.")
-	return ip 
+	return ip
 
 # Predefined Smart Plug Commands
 # For a full list of commands, consult tplink_commands.txt
@@ -40,7 +45,8 @@ commands = {'info'     : '{"system":{"get_sysinfo":{}}}',
 			'antitheft': '{"anti_theft":{"get_rules":{}}}',
 			'reboot'   : '{"system":{"reboot":{"delay":1}}}',
 			'power'	   : '{"emeter":{"get_realtime":{}}}',
-			'reset'    : '{"system":{"reset":{"delay":1}}}'
+			'reset'    : '{"system":{"reset":{"delay":1}}}',
+			'emeter'   : '{"emeter":{"get_realtime":{}}}'
 }
 
 # Encryption and Decryption of TP-Link Smart Home Protocol
@@ -48,18 +54,18 @@ commands = {'info'     : '{"system":{"get_sysinfo":{}}}',
 def encrypt(string):
 	key = 171
 	result = "\0\0\0\0"
-	for i in string: 
+	for i in string:
 		a = key ^ ord(i)
 		key = a
 		result += chr(a)
 	return result
 
 def decrypt(string):
-	key = 171 
+	key = 171
 	result = ""
-	for i in string: 
+	for i in string:
 		a = key ^ ord(i)
-		key = ord(i) 
+		key = ord(i)
 		result += chr(a)
 	return result
 
@@ -71,7 +77,7 @@ def decrypt(string):
 parser = argparse.ArgumentParser(description="TP-Link Wi-Fi Smart Plug Client v" + str(version))
 parser.add_argument("-t", "--target", metavar="<ip>", required=True, help="Target IP Address", type=validIP)
 group = parser.add_mutually_exclusive_group(required=True)
-group.add_argument("-c", "--command", metavar="<command>", help="Preset command to send. Choices are: "+", ".join(commands), choices=commands) 
+group.add_argument("-c", "--command", metavar="<command>", help="Preset command to send. Choices are: "+", ".join(commands), choices=commands)
 group.add_argument("-j", "--json", metavar="<JSON string>", help="Full JSON string of command to send")
 args = parser.parse_args()
 
@@ -87,12 +93,18 @@ else:
 #lastuse = Decimal(0.0);
 #example = "{\"emeter\":{\"get_realtime\":{\"current\":0.153188,\"voltage\":123.45678,\"power\":8.9012345,\"total\":0.002031,\"err_code\":0}}}"
 # Send command and receive reply 
+
+
+
+# Send command and receive reply
+
 try:
 	sock_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	sock_tcp.connect((ip, port))
 	sock_tcp.send(encrypt(cmd))
 	data = sock_tcp.recv(2048)
 	sock_tcp.close()
+
 	res = decrypt(data)
 	#match string
 	current = Decimal(re.findall(r"current\":(.+?),",res)[0])
@@ -161,6 +173,14 @@ try:
 	with open('HS110.csv', 'a+') as csvfile:
 		spamwriter = csv.writer(csvfile, delimiter=',',quoting=csv.QUOTE_ALL)
 		spamwriter.writerow([timeStr, current, voltage, power,use,lable,status])
+	# print type(data)
+
+	# with open('data.json','a') as f:
+	# 	f.write('\n')
+	# 	f.write(decrypt(data[4:]))
+
+	print "Sent:     ", cmd
+	print "Received: ", decrypt(data[4:])
 except socket.error:
 	quit("Cound not connect to host " + ip + ":" + str(port))
 
