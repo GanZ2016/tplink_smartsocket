@@ -1,5 +1,6 @@
 import socket
 import SocketServer
+import mysql.connector  
 
 # Check if IP is valid
 def validIP(ip):
@@ -21,13 +22,9 @@ commands = {'info'     : '{"system":{"get_sysinfo":{}}}',
 			'countdown': '{"count_down":{"get_rules":{}}}',
 			'antitheft': '{"anti_theft":{"get_rules":{}}}',
 			'reboot'   : '{"system":{"reboot":{"delay":1}}}',
-# <<<<<<< Updated upstream:tplink_smartplug.py
 			'power'	   : '{"emeter":{"get_realtime":{}}}',
 			'reset'    : '{"system":{"reset":{"delay":1}}}',
-# =======
-			'reset'    : '{"system":{"reset":{"delay":1}}}',
 			'emeter'   : '{"emeter":{"get_realtime":{}}}'
-# >>>>>>> Stashed changes:tplink-smartplug.py
 }
 
 # Encryption and Decryption of TP-Link Smart Home Protocol
@@ -52,6 +49,48 @@ def decrypt(string):
 
 ip = "10.0.0.244"
 port = 9999
+
+
+def check_status_name():
+	sql = "SELECT status,name FROM plug ORDER BY id DESC LIMIT 1;" 
+	cnx = mysql.connector.connect(user='root', password='12345678',
+								host='localhost',
+								database='tplink')
+	try:
+		cursor = cnx.cursor()
+		cursor.execute(sql)
+		for row in cursor.fetchall():
+			get_status = row[0]
+			get_name = row[1]
+	except:
+		cnx.rollback()
+	res = []
+	res.append(get_status)
+	res.append(get_name)
+	cnx.close()	
+	return res
+
+def check_realtime():
+	sql = "SELECT power,status,name FROM plug ORDER BY id DESC LIMIT 1;" 
+	cnx = mysql.connector.connect(user='root', password='12345678',
+								host='localhost',
+								database='tplink')
+	try:
+		cursor = cnx.cursor()
+		cursor.execute(sql)
+		for row in cursor.fetchall():
+			rt_power = row[0]
+			rt_status = row[1]
+			rt_name = row[2]
+	except:
+		cnx.rollback()
+	rt_res = []
+	rt_res.append(rt_power)
+	rt_res.append(rt_status)
+	rt_res.append(rt_name)
+	cnx.close()	
+	return rt_res
+    		
 
 class MyTCPHandler(SocketServer.BaseRequestHandler):
     """
