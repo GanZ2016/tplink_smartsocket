@@ -1,6 +1,11 @@
 import socket
+import mysql.connector
 import SocketServer
+<<<<<<< Updated upstream
 import mysql.connector  
+=======
+import subprocess
+>>>>>>> Stashed changes
 
 # Check if IP is valid
 def validIP(ip):
@@ -22,7 +27,11 @@ commands = {'info'     : '{"system":{"get_sysinfo":{}}}',
 			'countdown': '{"count_down":{"get_rules":{}}}',
 			'antitheft': '{"anti_theft":{"get_rules":{}}}',
 			'reboot'   : '{"system":{"reboot":{"delay":1}}}',
+<<<<<<< Updated upstream
 			'power'	   : '{"emeter":{"get_realtime":{}}}',
+=======
+# <<<<<<< Updated upstream:tplink_smartplug.py
+>>>>>>> Stashed changes
 			'reset'    : '{"system":{"reset":{"delay":1}}}',
 			'emeter'   : '{"emeter":{"get_realtime":{}}}',
 			'status'   : 'status',
@@ -125,6 +134,7 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
     def handle(self):
         # self.request is the TCP socket connected to the client
         self.data = self.request.recv(2048)
+<<<<<<< Updated upstream
 
         if self.data[0:2] == "m:":
             lable = self.data[2:]
@@ -153,12 +163,38 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
                 msg = decrypt(data[4:])
                 print "Returned: ", msg
                 self.request.sendall(msg[0])
+=======
+        if self.data == "status":
+            print "status"
+        elif self.data[:2] == "m:":
+            label = self.data[2:]
+            print label
+            subprocess.Popen(["python","test_subp.py",label])
+        else:
+            cmd = commands[self.data]
+            print "command: ", cmd
+            try:
+            	sock_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            	sock_tcp.connect((ip, port))
+            	sock_tcp.send(encrypt(cmd))
+            	data = sock_tcp.recv(2048)
+            	sock_tcp.close()
+            except socket.error:
+            	quit("Cound not connect to host " + ip + ":" + str(port))
+            msg = decrypt(data[4:])
+            print "Returned: ", msg
+            self.request.sendall(msg)
+>>>>>>> Stashed changes
 
 
 
 
 if __name__ == "__main__":
+<<<<<<< Updated upstream
     HOST, PORT = "10.105.110.33", 8000
+=======
+    HOST, PORT = "10.105.172.22", 8000
+>>>>>>> Stashed changes
 
     # Create the server, binding to localhost on port 9999
     server = SocketServer.TCPServer((HOST, PORT), MyTCPHandler)
