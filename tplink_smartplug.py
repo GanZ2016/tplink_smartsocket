@@ -1,24 +1,3 @@
-#!/usr/bin/env python
-# 
-# TP-Link Wi-Fi Smart Plug Protocol Client
-# For use with TP-Link HS-100 or HS-110
-#  
-# by Lubomir Stroetmann
-# Copyright 2016 softScheck GmbH 
-# 
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-# 
-#      http://www.apache.org/licenses/LICENSE-2.0
-# 
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# 
-#
 import socket
 import argparse
 import csv
@@ -30,6 +9,15 @@ from datetime import datetime
 import mysql.connector    
 
 version = 0.1
+
+#---------------------------
+#Type
+
+lable = 'light';
+
+status = 0;
+
+#---------------------------
 
 # Check if IP is valid
 def validIP(ip):
@@ -77,17 +65,6 @@ def decrypt(string):
 
 
 
-#---------------------------
-#Type
-
-lable = 'light';
-
-status = 0;
-
-
-
-
-#---------------------------
 
 
 # Parse commandline arguments
@@ -135,20 +112,20 @@ try:
 	try:
 		cursor = cnx.cursor()
 		cursor.execute(sql)
-		current = []
-		power = []
+		get_current = []
+		get_power = []
 		#cnx.commit()
 		for row in cursor.fetchall():
-			power.append(row[1])
-			current.append(row[0])
+			get_power.append(row[1])
+			get_current.append(row[0])
 	except:
 		cnx.rollback()
 
-	power_mean = np.mean(power)
-	power_std = np.std(power)
-	power_diff = np.max(power) - np.min(power)
-	current_mean = np.mean(current)
-	current_diff = np.max(current) - np.min(current)
+	power_mean = np.mean(get_power)
+	power_std = np.std(get_power)
+	power_diff = np.max(get_power) - np.min(get_power)
+	current_mean = np.mean(get_current)
+	current_diff = np.max(get_current) - np.min(get_current)
 	power_min = power_mean - power_diff
 	power_max = power_mean - power_diff
 	current_min = current_mean - current_diff
@@ -173,12 +150,13 @@ try:
 		cnx.rollback()		
 	cnx.close()	
 	#----------------------
-	print res
+	#print res
 	print "current:",current
 	print "voltage:",voltage
 	print "power:",power
 	print "Time:",timeStr
 	print "Use:",use
+	print "status",status
 
 	with open('HS110.csv', 'a+') as csvfile:
 		spamwriter = csv.writer(csvfile, delimiter=',',quoting=csv.QUOTE_ALL)
