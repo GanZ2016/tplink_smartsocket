@@ -138,6 +138,10 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
                 print "status", res_string[0]
                 print "name", res_string[1]
                 self.request.sendall(res_string[1] + ": "+ res_string[0])
+            if cmd == "usage":
+                res_val = month_cons()
+                print "usage", res_val
+                self.request.sendall("Monthly Usage: " + res_val  + "KWh")
             else:
                 try:
                     sock_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
