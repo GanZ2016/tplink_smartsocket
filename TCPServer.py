@@ -181,31 +181,31 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
                 # print self.data
                 msg = decrypt(data[4:])
                 print "Returned: ", msg
-                self.request.sendall(msg[0])
+                self.request.sendall(msg)
 # <<<<<<< Updated upstream
 
 # =======
 # =======
-        if self.data == "status":
-            print "status"
-        elif self.data[:2] == "m:":
-            label = self.data[2:]
-            print label
-            subprocess.Popen(["python","test_subp.py",label])
-        else:
-            cmd = commands[self.data]
-            print "command: ", cmd
-            try:
-            	sock_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            	sock_tcp.connect((ip, port))
-            	sock_tcp.send(encrypt(cmd))
-            	data = sock_tcp.recv(2048)
-            	sock_tcp.close()
-            except socket.error:
-            	quit("Cound not connect to host " + ip + ":" + str(port))
-            msg = decrypt(data[4:])
-            print "Returned: ", msg
-            self.request.sendall(msg)
+        # if self.data == "status":
+        #     print "status"
+        # elif self.data[:2] == "m:":
+        #     label = self.data[2:]
+        #     print label
+        #     subprocess.Popen(["python","test_subp.py",label])
+        # else:
+        #     cmd = commands[self.data]
+        #     print "command: ", cmd
+        #     try:
+        #     	sock_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        #     	sock_tcp.connect((ip, port))
+        #     	sock_tcp.send(encrypt(cmd))
+        #     	data = sock_tcp.recv(2048)
+        #     	sock_tcp.close()
+        #     except socket.error:
+        #     	quit("Cound not connect to host " + ip + ":" + str(port))
+        #     msg = decrypt(data[4:])
+        #     print "Returned: ", msg
+        #     self.request.sendall(msg)
 # >>>>>>> Stashed changes
 # >>>>>>> Stashed changes
 
@@ -215,7 +215,7 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
 if __name__ == "__main__":
 # <<<<<<< Updated upstream
 
-    HOST, PORT = "10.105.110.33", 8000
+    # HOST, PORT = "10.105.110.33", 8000
 
 # =======
 # <<<<<<< Updated upstream
