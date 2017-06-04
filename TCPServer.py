@@ -1,11 +1,16 @@
 import socket
 import mysql.connector
 import SocketServer
-import mysql.connector  
-
+import re
 import subprocess
+from decimal import Decimal
+from datetime import datetime
 
+#------------
 
+socket_ip = "192.168.43.216"
+port = 9999
+#-------------
 # Check if IP is valid
 def validIP(ip):
 	try:
@@ -58,12 +63,27 @@ def decrypt(string):
 		result += chr(a)
 	return result
 
-socket_ip = "10.105.110.33"
-port = 9999
+
 
 
 def check_status_name():
-	sql = "SELECT status,name FROM plug ORDER BY id DESC LIMIT 1;" 
+	#----------------------
+	# Get realtime power
+	cmd = '{"emeter":{"get_realtime":{}}}'
+	try:
+		sock_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		sock_tcp.connect((socket_ip, port))
+		sock_tcp.send(encrypt(cmd))
+		data = sock_tcp.recv(2048)
+		sock_tcp.close()
+	except socket.error:
+		quit("Cound not connect to host " + socket_ip + ":" + str(port))
+	msg = decrypt(data[4:])
+	realtime_power = Decimal(re.findall(r"power\":(.+?),",msg)[0])
+	
+	#------------------
+	#Get name
+	sql = "SELECT name FROM plug ORDER BY id DESC LIMIT 1;" 
 	cnx = mysql.connector.connect(user='root', password='12345678',
 								host='localhost',
 								database='tplink')
@@ -71,17 +91,36 @@ def check_status_name():
 		cursor = cnx.cursor()
 		cursor.execute(sql)
 		for row in cursor.fetchall():
-			get_status = row[0]
-			get_name = row[1]
+			get_name = row[0]
 	except:
 		cnx.rollback()
-	res = []
-	res.append(get_status)
-	res.append(get_name)
 	cnx.close()	
-	return res
+	#------------------
+
+
+	#------------------
+	#Get power
+	get_power = []
+	sql = "SELECT power FROM plug WHERE name = \"" + get_name +"\";" 
+	cnx = mysql.connector.connect(user='root', password='12345678',
+								host='localhost',
+								database='tplink')
+	try:
+		cursor = cnx.cursor()
+		cursor.execute(sql)
+		for row in cursor.fetchall():
+			get_power.append(row[0])
+	except:
+		cnx.rollback()
+	cnx.close()	
+
+	#TODO
+	# Use getpower, realtime_power to calculate the status.
+	return 0
+
 
 def check_realtime():
+    
 	sql = "SELECT power,status,name FROM plug ORDER BY id DESC LIMIT 1;" 
 	cnx = mysql.connector.connect(user='root', password='12345678',
 								host='localhost',
@@ -129,7 +168,6 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
         # self.request is the TCP socket connected to the client
         self.data = self.request.recv(2048)
 
-
         if self.data[0:2] == "m:":
             label = self.data[2:]
             print label
@@ -143,7 +181,7 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
                 print "status", res_string[0]
                 print "name", res_string[1]
                 self.request.sendall(res_string[1] + ": "+ res_string[0])
-            if cmd == "usage":
+            elif cmd == "usage":
                 res_val = month_cons()
                 print "usage", res_val
                 self.request.sendall("Monthly Usage: " + res_val  + "KWh")
@@ -156,12 +194,13 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
                     sock_tcp.close()
                 except socket.error:
                     quit("Cound not connect to host " + socket_ip + ":" + str(port))
+                msg = decrypt(data[4:])
+                print "Returned: ", msg
+                self.request.sendall(msg)
 
                 # print "{} wrote:".format(self.client_address[0])
                 # print self.data
-                msg = decrypt(data[4:])
-                print "Returned: ", msg
-                self.request.sendall(msg[0])
+
 
 
 
@@ -169,7 +208,7 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
 
 if __name__ == "__main__":
 
-    HOST, PORT = "10.105.110.33", 8000
+    HOST, PORT = "192.168.43.122", 8000
 
 
     # Create the server, binding to localhost on port 9999

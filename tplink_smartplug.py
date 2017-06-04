@@ -18,7 +18,7 @@ version = 0.1
 #---------------------------
 #Type
 
-lable = TCPServer.lable;
+lable = '';
 
 status = 0;
 
