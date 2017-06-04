@@ -116,7 +116,13 @@ def check_status_name():
 
 	#TODO
 	# Use getpower, realtime_power to calculate the status.
-	return 0
+
+
+	#result
+	res = []
+	res.append("0")
+	res.append(get_name)
+	return res
 
 
 def check_realtime():
@@ -142,18 +148,20 @@ def check_realtime():
 	return rt_res
 
 def month_cons():
-	cnx = mysql.connector.connect(user='root', password='12345678', host='localhost', database='tplink')
-	sql = "SELECT cons WHERE DATE_SUB(CURDATE(), INTERVAL 30 DAY) <= datatime;"	
-	total_cons = []
+	#----------------------
+	# Get realtime cosumption
+	cmd = '{"emeter":{"get_realtime":{}}}'
 	try:
-		cursor = cnx.cursor()
-		cursor.execute(sql)
-		for row in cursor.fetchall():
-    			total_cons.append(row[0])
-	except:
-		cnx.rollback()
-	cnx.close()	
-	return max(total_cons) - min(total_cons) 		
+		sock_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		sock_tcp.connect((socket_ip, port))
+		sock_tcp.send(encrypt(cmd))
+		data = sock_tcp.recv(2048)
+		sock_tcp.close()
+	except socket.error:
+		quit("Cound not connect to host " + socket_ip + ":" + str(port))
+	msg = decrypt(data[4:])
+	use = Decimal(re.findall(r"total\":(.+?),",msg)[0])
+	return use
 
 class MyTCPHandler(SocketServer.BaseRequestHandler):
     """
@@ -182,9 +190,12 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
                 print "name", res_string[1]
                 self.request.sendall(res_string[1] + ": "+ res_string[0])
             elif cmd == "usage":
-                res_val = month_cons()
-                print "usage", res_val
-                self.request.sendall("Monthly Usage: " + res_val  + "KWh")
+				self.data[0:2] == "u:"
+				cost = self.data[2:]
+				res_val = month_cons()
+				total_cost = float(cost) * res_val
+				print "total cost", total_cost
+				self.request.sendall("Monthly Cost: " + total_cost  + "KWh")
             else:
                 try:
                     sock_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
