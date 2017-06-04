@@ -1,18 +1,18 @@
 import socket
 import mysql.connector
 import SocketServer
-<<<<<<< Updated upstream
-import mysql.connector  
+# <<<<<<< Updated upstream
+import mysql.connector
 
 import subprocess
 
-=======
+# =======
 # <<<<<<< Updated upstream
 import mysql.connector
 # =======
 import subprocess
 # >>>>>>> Stashed changes
->>>>>>> Stashed changes
+# >>>>>>> Stashed changes
 
 # Check if IP is valid
 def validIP(ip):
@@ -34,15 +34,15 @@ commands = {'info'     : '{"system":{"get_sysinfo":{}}}',
 			'countdown': '{"count_down":{"get_rules":{}}}',
 			'antitheft': '{"anti_theft":{"get_rules":{}}}',
 			'reboot'   : '{"system":{"reboot":{"delay":1}}}',
-<<<<<<< Updated upstream
+# <<<<<<< Updated upstream
 			'power'	   : '{"emeter":{"get_realtime":{}}}',
-=======
+# =======
 # <<<<<<< Updated upstream
 			'power'	   : '{"emeter":{"get_realtime":{}}}',
 # =======
 # <<<<<<< Updated upstream:tplink_smartplug.py
 # >>>>>>> Stashed changes
->>>>>>> Stashed changes
+# >>>>>>> Stashed changes
 			'reset'    : '{"system":{"reset":{"delay":1}}}',
 			'emeter'   : '{"emeter":{"get_realtime":{}}}',
 			'status'   : 'status',
@@ -144,11 +144,11 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
     def handle(self):
         # self.request is the TCP socket connected to the client
         self.data = self.request.recv(2048)
-<<<<<<< Updated upstream
-
-=======
 # <<<<<<< Updated upstream
->>>>>>> Stashed changes
+
+# =======
+# <<<<<<< Updated upstream
+# >>>>>>> Stashed changes
 
         if self.data[0:2] == "m:":
             label = self.data[2:]
@@ -182,9 +182,9 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
                 msg = decrypt(data[4:])
                 print "Returned: ", msg
                 self.request.sendall(msg[0])
-<<<<<<< Updated upstream
+# <<<<<<< Updated upstream
 
-=======
+# =======
 # =======
         if self.data == "status":
             print "status"
@@ -207,23 +207,23 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
             print "Returned: ", msg
             self.request.sendall(msg)
 # >>>>>>> Stashed changes
->>>>>>> Stashed changes
+# >>>>>>> Stashed changes
 
 
 
 
 if __name__ == "__main__":
-<<<<<<< Updated upstream
+# <<<<<<< Updated upstream
 
     HOST, PORT = "10.105.110.33", 8000
 
-=======
+# =======
 # <<<<<<< Updated upstream
     HOST, PORT = "10.0.0.94", 8000
 # =======
     # HOST, PORT = "10.105.172.22", 8000
 # >>>>>>> Stashed changes
->>>>>>> Stashed changes
+# >>>>>>> Stashed changes
 
     # Create the server, binding to localhost on port 9999
     server = SocketServer.TCPServer((HOST, PORT), MyTCPHandler)
