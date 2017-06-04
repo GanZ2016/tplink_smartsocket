@@ -1,4 +1,5 @@
 import sys
+<<<<<<< Updated upstream
 import socket
 import argparse
 import csv
@@ -16,11 +17,16 @@ import json
 status = 0;
 ip = "10.0.0.244"
 #-------------
+=======
+import time
+>>>>>>> Stashed changes
 
 # print sys.argv[1]
 label = sys.argv[1]
 
 port = 9999
+num_sample = 100
+
 commands = {'info'     : '{"system":{"get_sysinfo":{}}}',
 			'on'       : '{"system":{"set_relay_state":{"state":1}}}',
 			'off'      : '{"system":{"set_relay_state":{"state":0}}}',
@@ -138,6 +144,9 @@ def insertToDB(result,label):
 	# print "Sent:     ", cmd
 	# print "Received: ", decrypt(data[4:])
 
-while(1):
+
+while(num_sample):
     result = measure_socket(ip, port)
     insertToDB(result,label)
+	time.sleep(10)
+	num_sample -= 1
