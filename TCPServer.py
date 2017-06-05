@@ -14,7 +14,7 @@ import numpy as np
 # ip:m:label 			-- set label and start measurement
 # ip:u:power_rate 	    -- return power cost
 # ip:r:ip				-- register device and return Ok/Retry
-# ip:c:status 		    -- return current status: 0/1 : Label
+# ip:s:label 		    -- return current status: 0/1 : Label
 # ip:c:realtime         -- return current,voltage,power
 #------------
 
@@ -79,7 +79,7 @@ def decrypt(string):
 
 
 
-def check_status_name(socket_ip):
+def check_status_name(socket_ip,label):
 	#----------------------
 	# Get realtime power
 	cmd = '{"emeter":{"get_realtime":{}}}'
@@ -96,18 +96,19 @@ def check_status_name(socket_ip):
 
 	#------------------
 	#Get name
-	sql = "SELECT name FROM plug ORDER BY id DESC LIMIT 1;"
-	cnx = mysql.connector.connect(user='root', password='12345678',
-								host='localhost',
-								database='tplink')
-	try:
-		cursor = cnx.cursor()
-		cursor.execute(sql)
-		for row in cursor.fetchall():
-			get_name = row[0]
-	except:
-		cnx.rollback()
-	cnx.close()
+	# sql = "SELECT name FROM plug ORDER BY id DESC LIMIT 1;"
+	# cnx = mysql.connector.connect(user='root', password='12345678',
+	# 							host='localhost',
+	# 							database='tplink')
+	# try:
+	# 	cursor = cnx.cursor()
+	# 	cursor.execute(sql)
+	# 	for row in cursor.fetchall():
+	# 		get_name = row[0]
+	# except:
+	# 	cnx.rollback()
+	# cnx.close()
+	get_name = label
 	#------------------
 
 
@@ -164,7 +165,7 @@ def check_status_name(socket_ip):
 # 	rt_res.append(rt_power)
 # 	return rt_res
 
-def month_cons():
+def month_cons(socket_ip):
 	#----------------------
 	# Get realtime cosumption
 	cmd = '{"emeter":{"get_realtime":{}}}'
@@ -178,7 +179,7 @@ def month_cons():
 		quit("Cound not connect to host " + socket_ip + ":" + str(port))
 	msg = decrypt(data[4:])
 	use = Decimal(re.findall(r"total\":(.+?),",msg)[0])
-	return use
+	return str(use)
 
 def check_register(plug_ip):
 	res = 0
@@ -230,7 +231,7 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
             except:
                 pass
             lockOne.acquire()
-            pid = subprocess.Popen(["python","test_subp.py",message])
+            pid = subprocess.Popen(["python","test_subp.py",socket_ip,label])
             lockOne.release()
         elif cm_type == "r":
 			regis = check_register(socket_ip)
@@ -240,27 +241,28 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
 			else:
 				self.request.sendall("Retry")
         elif cm_type == "u":
-            cost = cm
-            res_val = month_cons()
-            total_cost = float(cost) * res_val
+            #cost = cm
+            res_val = month_cons(socket_ip)
+            #total_cost = float(cost) * res_val
+            total_cost =  res_val
             print "total cost", total_cost
-            self.request.sendall("Monthly Cost: " + total_cost  + " $")
+            self.request.sendall("Monthly Cost: " + total_cost  + " Kwh")
+        elif cm_type == "s":
+			check_label = cm
+			res_string = check_status_name(socket_ip,check_label)
+			print "status", res_string[0]
+			print "name", res_string[1]
+			self.request.sendall(res_string[1] + ": "+ res_string[0])
         else:
-            cmd = commands[cm]
-            print "command: ", cmd
-            if cmd == "status":
-                res_string = check_status_name(socket_ip)
-                print "status", res_string[0]
-                print "name", res_string[1]
-                self.request.sendall(res_string[1] + ": "+ res_string[0])
-            else:
-				sock_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-				sock_tcp.connect((socket_ip, port))
-				sock_tcp.send(encrypt(cmd))
-				data = sock_tcp.recv(2048)
-				sock_tcp.close()
-				msg = decrypt(data[4:])
-				self.request.sendall(msg)
+			cmd = commands[cm]
+			print "command: ", cmd
+			sock_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			sock_tcp.connect((socket_ip, port))
+			sock_tcp.send(encrypt(cmd))
+			data = sock_tcp.recv(2048)
+			sock_tcp.close()
+			msg = decrypt(data[4:])
+			self.request.sendall(msg)
             # elif cmd == "realtime":
             #     res_string = check_realtime()
             #     print "current", res_string[0]
@@ -270,8 +272,8 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
 
 if __name__ == "__main__":
 
-    # HOST, PORT = "192.168.43.122", 8000
-    HOST, PORT = "10.0.0.94", 8000
+    HOST, PORT = "192.168.43.122", 8000
+    #HOST, PORT = "10.0.0.94", 8000
 
     # Create the server, binding to localhost on port 9999
     server = SocketServer.TCPServer((HOST, PORT), MyTCPHandler)
