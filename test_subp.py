@@ -19,7 +19,9 @@ ip = "192.168.43.216"
 #-------------
 
 # print sys.argv[1]
-label = sys.argv[1]
+message = sys.argv[1]
+ip = message[0]
+label = message[1]
 
 port = 9999
 commands = {'info'     : '{"system":{"get_sysinfo":{}}}',
@@ -120,20 +122,20 @@ def insertToDB(result,label):
 		cursor = cnx.cursor()
 		cursor.execute("INSERT INTO plug (datetime, current, voltage, power, cons, status, name) VALUES (%s, %s, %s, %s, %s, %s, %s)",(timeStr,current,voltage,power,use,status,label))
 		cnx.commit()
-		print "INSERT INTO DATABASE"
+		#print "INSERT INTO DATABASE"
 	finally:
 		cnx.rollback()		
 	cnx.close()	
 	#----------------------
 	#print res
-	print "current:",current
-	print "voltage:",voltage
-	print "power:",power
-	print "Time:",timeStr
-	print "Use:",use
-	print "status",status
-	print "label:",label
-	print "--------------"
+	# print "current:",current
+	# print "voltage:",voltage
+	# print "power:",power
+	# print "Time:",timeStr
+	# print "Use:",use
+	# print "status",status
+	# print "label:",label
+	# print "--------------"
 
 	with open('HS110.csv', 'a+') as csvfile:
 		spamwriter = csv.writer(csvfile, delimiter=',',quoting=csv.QUOTE_ALL)
