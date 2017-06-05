@@ -209,11 +209,13 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
     def handle(self):
         # self.request is the TCP socket connected to the client
         self.data = self.request.recv(2048)
+        print self.data
         ip_cm = self.data
         cm_list = ip_cm.split(':')
         socket_ip = cm_list[0]
-        cm_type = cm_list[2]
-        cm = cm_list[3]
+        cm_type = cm_list[1]
+        cm = cm_list[2]
+        print ip_cm
         
         if cm_type == "m":
             global pid
@@ -232,8 +234,9 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
             lockOne.release()
         elif cm_type == "r":
 			regis = check_register(socket_ip)
+			print "rigsiter: ", regis
 			if regis == 1:
-				self.request.sendall("Ok")
+				self.request.sendall("OK")
 			else:
 				self.request.sendall("Retry")
         elif cm_type == "u":
